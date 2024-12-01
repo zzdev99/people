@@ -1,7 +1,7 @@
 <template>
     <div class="flex h-screen">
         <div class="container m-auto px-4 sm:px-0">
-            <div class="form bg-gray-200 px-8 py-12">
+            <div class="form bg-gray-200 px-8 py-12 rounded-lg">
                 <ApplicationLogo class="w-12 m-auto mb-12" />
 
                 <Form />
