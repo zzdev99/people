@@ -18,5 +18,18 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+        \App\Models\Country::create([
+            'id' => 1,
+            'name' => 'Slovenija',
+        ]);
+
+        \App\Models\Person::create([
+            'emso' => '1092145690123',
+            'name' => 'Žan Zakrajšek',
+            'country_id' => 1,
+            'age' => 25,
+            'description' => 'I love Slovenia',
+        ]);
     }
 }

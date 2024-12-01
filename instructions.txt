@@ -1,0 +1,11 @@
+create .env file
+configure database connection
+create database
+
+run app (php artisan serve)
+run assets (npm run dev)
+
+run migrations (php artisan migrate)
+open http://127.0.0.1:8000/ in browser
+upload csv and run
+run queue (php artisan queue:work --timeout=3600 --queue=imports)
