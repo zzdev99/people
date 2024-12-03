@@ -4,31 +4,37 @@
             <label class="block text-sm/6 font-medium text-gray-900">
                 Naložite datoteko z osebami:
             </label>
-            <div class="mt-2 mb-4 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                <div class="text-center">
-                    <div v-show="!selectedFile" class="mt-4 flex text-sm/6 text-gray-600">
-                        <label for="file-upload"
-                            class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
-                            <span class="px-2">Naložite .CSV datoteko</span>
-                            <input @input="fileInputHandler" ref="fileUpload" id="file-upload" type="file" accept=".csv"
-                                class="sr-only">
-                        </label>
-                        <p class="pl-1">ali jo povlecite sem</p>
+            <div :class="{ dragover: isDragover }"
+                @drop.prevent="handleDrop"
+                @dragover.prevent="handleDragover"
+                @dragleave.prevent="handleDragleave"
+                class="label-container mt-2 mb-4 flex justify-center rounded-lg border border-dashed border-gray-900/25">
+                <label for="file-upload"
+                    class="file-upload-label px-6 py-10 relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
+                    <div v-show="!selectedFile" class="flex justify-center text-sm/6 text-gray-600">
+                        <div>
+                            <span>Naložite .CSV datoteko</span>
+                            <input @input="fileInputHandler"
+                                   ref="fileUpload"
+                                   id="file-upload"
+                                   type="file"
+                                   accept=".csv"
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        </div>
                     </div>
-                    <p v-if="selectedFile" class="text-xs/5 text-gray-600">
+                    <div v-if="selectedFile" class="flex justify-center text-xs/5 text-gray-600">
                         <b>{{ selectedFile.name }} ({{ fileSize }})</b>
-
-                        <span @click="removeFile" class="text-red-400 pl-2 cursor-pointer">Remove file</span>
-                    </p>
-                </div>
+                        <span @click.prevent="removeFile" class="text-red-400 pl-2 cursor-pointer">Remove file</span>
+                    </div>
+                </label>
             </div>
 
-            <button type="submit" @click="submitForm" :disabled="!selectedFile"
+            <button type="submit" @click="submitForm"
                 class="cursor-pointer inline-block mb-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                Naloži
+                Uvoz podatkov
             </button>
 
-            <Notice v-if="noticeMessage" :message="noticeMessage" :type="noticeType"/>
+            <Notice v-if="noticeMessage" :message="noticeMessage" :type="noticeType" />
         </div>
     </div>
 </template>
@@ -41,9 +47,10 @@ export default {
     components: { Notice },
     data() {
         return {
-            selectedFile: false,
+            selectedFile: null,
             noticeMessage: null,
             noticeType: 'success',
+            isDragover: false,
         }
     },
     methods: {
@@ -52,13 +59,38 @@ export default {
                 this.selectedFile = e.target.files[0]
             }
         },
-        removeFile() {
+        handleDragover() {
+            this.isDragover = true
+        },
+        handleDragleave() {
+            this.isDragover = false
+        },
+        handleDrop(event) {
+            this.isDragover = false
+            const files = event.dataTransfer.files
+            if (files.length > 0) {
+                if (files[0].name.toLowerCase().endsWith('.csv')) {
+                    this.selectedFile = files[0]
+                    const dataTransfer = new DataTransfer()
+                    dataTransfer.items.add(files[0])
+                    this.$refs.fileUpload.files = dataTransfer.files
+                } else {
+                    this.noticeMessage = 'Neveljavna končnica datoteke'
+                    this.noticeType = 'error'
+                }
+            }
+        },
+        removeFile(e) {
             this.$refs.fileUpload.value = ''
-            this.selectedFile = false
+            this.selectedFile = null
         },
         submitForm() {
             const file = this.$refs.fileUpload.files[0];
-            if (!file) return;
+            if (!file){
+                this.noticeMessage = 'Niste naložili datoteke'
+                this.noticeType = 'error'
+                return
+            };
 
             const formData = new FormData();
             formData.append('file', file);
@@ -96,4 +128,17 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.label-container {
+    &:hover,
+    &.dragover {
+        border-color: #4f46e5;
+        border-style: solid;
+    }
+}
+
+.file-upload-label {
+    display: block;
+    width: 100%;
+}
+</style>
