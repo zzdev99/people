@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\PusherBroadcast;
 use App\Models\ImportJob;
 use App\Models\Person;
 use App\Models\Country;
@@ -49,10 +50,12 @@ class ProcessCsvFile implements ShouldQueue
                 'status' => 'failed',
                 'error_logs' => json_encode(['error' => $e->getMessage()])
             ]);
+            event(new PusherBroadcast('Uvoz ni uspel', 'danger'));
 
             throw $e;
         } finally {
             Storage::delete($this->filePath);
+            event(new PusherBroadcast('Uvoz uspešno zaključen', 'success'));
             DB::disconnect();
         }
     }

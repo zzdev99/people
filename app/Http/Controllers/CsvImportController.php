@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PusherBroadcast;
 use App\Jobs\ProcessCsvFile;
 use App\Models\ImportJob;
 use Exception;
@@ -33,7 +34,8 @@ class CsvImportController extends Controller
                 'processed_rows' => 0,
             ]);
 
-            ProcessCsvFile::dispatch($importJob->id, $path)->onQueue('imports');
+            event(new PusherBroadcast('Uvoz se je začel', 'success'));
+            ProcessCsvFile::dispatch($importJob->id, $path);
 
             return response()->json([
                 'message' => 'Datoteka uspešno naložena',

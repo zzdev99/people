@@ -4,9 +4,7 @@
             <label class="block text-sm/6 font-medium text-gray-900">
                 Naložite datoteko z osebami:
             </label>
-            <div :class="{ dragover: isDragover }"
-                @drop.prevent="handleDrop"
-                @dragover.prevent="handleDragover"
+            <div :class="{ dragover: isDragover }" @drop.prevent="handleDrop" @dragover.prevent="handleDragover"
                 @dragleave.prevent="handleDragleave"
                 class="label-container mt-2 mb-4 flex justify-center rounded-lg border border-dashed border-gray-900/25">
                 <label for="file-upload"
@@ -14,17 +12,13 @@
                     <div v-show="!selectedFile" class="flex justify-center text-sm/6 text-gray-600">
                         <div>
                             <span>Naložite .CSV datoteko</span>
-                            <input @input="fileInputHandler"
-                                   ref="fileUpload"
-                                   id="file-upload"
-                                   type="file"
-                                   accept=".csv"
-                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <input @input="fileInputHandler" ref="fileUpload" id="file-upload" type="file" accept=".csv"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         </div>
                     </div>
                     <div v-if="selectedFile" class="flex justify-center text-xs/5 text-gray-600">
                         <b>{{ selectedFile.name }} ({{ fileSize }})</b>
-                        <span @click.prevent="removeFile" class="text-red-400 pl-2 cursor-pointer">Remove file</span>
+                        <span @click.prevent="removeFile" class="text-red-400 pl-2 cursor-pointer">Odstrani</span>
                     </div>
                 </label>
             </div>
@@ -51,6 +45,8 @@ export default {
             noticeMessage: null,
             noticeType: 'success',
             isDragover: false,
+            eventMsg: null,
+            eventStatus: null
         }
     },
     methods: {
@@ -86,7 +82,7 @@ export default {
         },
         submitForm() {
             const file = this.$refs.fileUpload.files[0];
-            if (!file){
+            if (!file) {
                 this.noticeMessage = 'Niste naložili datoteke'
                 this.noticeType = 'error'
                 return
@@ -106,6 +102,20 @@ export default {
                 this.noticeMessage = error.response.data.message
                 this.noticeType = 'error'
             });
+        },
+        setPusher() {
+            const t = this
+            let channel = pusher.subscribe('job-status');
+            channel.bind('job-status-event', function (data) {
+                t.eventMsg = data.message
+                t.eventStatus = data.status
+
+                t.$notify({
+                    title: data.message,
+                    duration: 5000,
+                    type: data.status
+                })
+            });
         }
     },
     computed: {
@@ -124,11 +134,14 @@ export default {
 
             return `${size.toFixed(2)} ${units[unitIndex]}`;
         }
+    },
+    mounted() {
+        this.setPusher();
     }
 }
 </script>
 
-<style scoped>
+<style>
 .label-container {
     &:hover,
     &.dragover {
@@ -140,5 +153,27 @@ export default {
 .file-upload-label {
     display: block;
     width: 100%;
+}
+
+.vue-notification-group {
+    margin-top: .5rem;
+}
+
+.vue-notification-template {
+    color: #fff;
+    padding: .5rem;
+    margin-bottom: .5rem;
+
+    &.success {
+        background-color: green;
+    }
+
+    &.danger {
+        background-color: red;
+    }
+}
+
+.notification-content {
+    font-size: .8em;
 }
 </style>
